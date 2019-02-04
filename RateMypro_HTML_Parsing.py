@@ -1,21 +1,35 @@
 
 # -*- coding: utf-8 -*-
-# @Time    : 2019/1/23 下午12:29
+# @Time    : 2019/2/3 下午12:29
 # @Author  : mingchun liu
 # @Email   : psymingchun@gmail.com
-# @File    : RMP.py
+# @File    : RateMypro_HTML_Parsing.py
 # @Software: PyCharm
 # @description：从原始网页数据中提取有效信息，保存为csv格式
+
+#++++++++++原始数据集+++++++++++++++#
+# 1.【01dataset】原始网页数据是322713个
+# 2.【02dataset】原始网页数据是707618个
+# 3.【03dataset】原始网页数据是200969个
+# 4.【04dataset】原始网页数据是622610个
+#原始数据共计1853910
+
+#++++++++++网页解析后数据集++++++++++#
+#提取时间：2019年2月3日12:00 - 2019年2月4日15:00
+# 1.【Extract_RateMyProfessor1】提取01dataset有效数据189602个
+# 2.【Extract_RateMyProfessor2】提取02dataset有效数据440990个
+# 3.【Extract_RateMyProfessor3】提取03dataset有效数据114804个
+# 4.【Extract_RateMyProfessor4】提取04dataset有效数据440990个
+# 有效数据共计1186386
+
 
 import pandas as pd
 from pyquery import PyQuery as PQ
 import re
 import os
 
-path1='/Users/liumingchun/【1】科研+实验室/4-科研项目/RateMyProfessor/data/DownloadedRateMyProfessorData/prof-page-tid-2028529.data'
-path ='/Users/liumingchun/【1】科研+实验室/4-科研项目/RateMyProfessor/data/DownloadedRateMyProfessorData-2/'
-res_path = '/Users/liumingchun/Document/data/'
-
+path ='I:\RateMyProfessor电脑2\DownloadedRateMyProfessorData'
+res_path = r'C:\Users\Administrator\Desktop\RMP3\data'
 
 file_list = os.listdir(path)
 
@@ -23,13 +37,9 @@ file_list = os.listdir(path)
 num = 0
 for each in file_list:
     # print(path+each)
-    file_path = path+each
+    file_path = path+'\\'+each
     with open(file_path,'r') as f:
         html = f.read()
-
-# with open(path1,'r') as f:
-#     html = f.read()
-# doc = PQ(html)
 
     professor_names = []
     school_names = []
@@ -79,11 +89,12 @@ for each in file_list:
             local_name = area.split(',')[1]
             state_name = area.split(',')[2]
         else:
-            professor_name = 'NULL'
-            school_name = 'NULL'
-            department_name = 'NULL'
-            local_name = 'NULL'
-            state_name = 'NULL'
+            professor_name = '0'
+            school_name = '0'
+            department_name = '0'
+            local_name = '0'
+            state_name = '0'
+
         professor_names.append(professor_name)
         school_names.append(school_name)
         department_names.append(department_name)
@@ -121,7 +132,8 @@ for each in file_list:
                 tag = tag.strip()
                 tags_professor.append(tag)
             else:
-                tags_professor.append('NULL')
+                pass
+                # tags_professor.append('NULL')
 
             # number of students
             num_student = doc('div.table-toggle.rating-count.active').text()
@@ -184,11 +196,27 @@ for each in file_list:
         infos = {'professor_name': professor_names, 'school_name': school_names, 'department_name': department_names,
                  'local_name': local_names, 'state_name': state_names, 'star_rating': star_ratings, 'take_again': take_agains,
                  'diff_index': diff_indexs, 'tag_professor': tags_professor, 'num_student': num_students,
-                 'post_date': post_date,'name_onlines':name_onlines,'student_star ':stu_stars, 'student_difficult' :stu_diffs, 'attence':attences, 'for_credits':for_credits,'would_take_agains':would_take_agains,'grades':grades,'comments': comments}
+                 'post_date': post_date,'name_onlines':name_onlines,'student_star':stu_stars, 'student_difficult' :stu_diffs, 'attence':attences, 'for_credits':for_credits,'would_take_agains':would_take_agains,'grades':grades,'comments': comments}
         df = pd.DataFrame().from_dict(infos,orient='index')
         df = df.T
 
 
-        df.to_csv(res_path+str(num)+'.csv',index=False)
-        print('第'+str(num) +'文件')
+        if df['professor_name'][0] == '0':
+            pass
+        else:
+            #填充教授信息
+            df.professor_name.ffill(inplace=True)
+            df.school_name.ffill(inplace=True)
+            df.department_name.ffill(inplace=True)
+            df.local_name.ffill(inplace=True)
+            df.state_name.ffill(inplace=True)
+            df.star_rating.ffill(inplace=True)
+            df.take_again.ffill(inplace=True)
+            df.diff_index.ffill(inplace=True)
+            df.tag_professor.ffill(inplace=True)
+            df.num_student.ffill(inplace=True)
+            df.to_csv(res_path + str(num) + '.csv', index=False)
+
+            print('第' + str(num) + '文件','名字是'+df['professor_name'][0])
+
         num += 1
