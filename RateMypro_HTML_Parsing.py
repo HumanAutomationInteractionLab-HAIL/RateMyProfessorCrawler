@@ -10,17 +10,42 @@
 #++++++++++原始数据集+++++++++++++++#
 # 1.【01dataset】原始网页数据是322713个
 # 2.【02dataset】原始网页数据是707618个
-# 3.【03dataset】原始网页数据是200969个
-# 4.【04dataset】原始网页数据是622610个
+# 3.【03dataset】原始网页数据是622610个
+# 4.【04dataset】原始网页数据是200969个
 #原始数据共计1853910
 
 #++++++++++网页解析后数据集++++++++++#
 #提取时间：2019年2月3日12:00 - 2019年2月4日15:00
 # 1.【Extract_RateMyProfessor1】提取01dataset有效数据189602个
 # 2.【Extract_RateMyProfessor2】提取02dataset有效数据440990个
-# 3.【Extract_RateMyProfessor3】提取03dataset有效数据114804个
-# 4.【Extract_RateMyProfessor4】提取04dataset有效数据440990个
-# 有效数据共计1186386
+# 3.【Extract_RateMyProfessor3】提取03dataset有效数据432344个
+# 4.【Extract_RateMyProfessor4】提取04dataset有效数据114804个
+# 有效数据共计1177740
+
+#++++++++++数据集维度++++++++#
+#professor_name
+#school_name
+#department_name
+#local_name
+#state_name
+#year_since_first_review
+#star_rating
+#take_again
+#diff_index
+#tag_professor
+#num_student
+#post_date
+#name_onlines
+#student_star
+#student_difficult
+#attence for_credits
+#would_take_agains
+#grades
+#stu_tags
+#help_useful
+#help_not_useful
+#comments
+#共计22个特征
 
 
 import pandas as pd
@@ -28,13 +53,11 @@ from pyquery import PyQuery as PQ
 import re
 import os
 
-path ='I:\RateMyProfessor电脑2\DownloadedRateMyProfessorData'
-res_path = r'C:\Users\Administrator\Desktop\RMP3\data'
+path ='I:\DownloadedRateMyProfessorData-01dataset'
+res_path = r'C:\Users\Administrator\Desktop\RMP1\data'
 
 file_list = os.listdir(path)
-
-
-num = 0
+num = 1
 for each in file_list:
     # print(path+each)
     file_path = path+'\\'+each
@@ -65,7 +88,10 @@ for each in file_list:
     would_take_agains =[]
     grades =[]
 
+    stu_tags = []
     comments = []
+    help_useful = []
+    help_not_useful = []
 
     try:
         doc = PQ(html)
@@ -185,7 +211,14 @@ for each in file_list:
         grade = doc('span.grade')
         for each in grade.items():
             recieved_grade = each.text().split(' ')[2].strip()
+
             grades.append(recieved_grade)
+
+        stu_tag = doc('div.tagbox')
+        for each in stu_tag.items():
+            tags = re.sub(r'\\r\\n', "", each.text()).strip()
+            # print(tags)
+            stu_tags.append(tags)
 
         comment = doc('p.commentsParagraph')
         for each in comment.items():
@@ -193,12 +226,21 @@ for each in file_list:
             # print(each_comment)
             comments.append(each_comment)
 
+        help_usefuls = doc('div.thumbs')
+        for each in help_usefuls.items():
+            help = re.sub(r'\\r\\n',"",each.text()).strip()
+            num_useful = re.findall('\d',help)
+            # print(num)
+            help_useful.append(num_useful[0])
+            help_not_useful.append(num_useful[1])
+
         infos = {'professor_name': professor_names, 'school_name': school_names, 'department_name': department_names,
                  'local_name': local_names, 'state_name': state_names, 'star_rating': star_ratings, 'take_again': take_agains,
                  'diff_index': diff_indexs, 'tag_professor': tags_professor, 'num_student': num_students,
-                 'post_date': post_date,'name_onlines':name_onlines,'student_star':stu_stars, 'student_difficult' :stu_diffs, 'attence':attences, 'for_credits':for_credits,'would_take_agains':would_take_agains,'grades':grades,'comments': comments}
+                 'post_date': post_date,'name_onlines':name_onlines,'student_star':stu_stars, 'student_difficult' :stu_diffs, 'attence':attences, 'for_credits':for_credits,'would_take_agains':would_take_agains,'grades':grades,'stu_tags':stu_tags, 'help_useful':help_useful,'help_not_useful':help_not_useful,'comments': comments}
         df = pd.DataFrame().from_dict(infos,orient='index')
         df = df.T
+
 
 
         if df['professor_name'][0] == '0':
@@ -215,8 +257,13 @@ for each in file_list:
             df.diff_index.ffill(inplace=True)
             df.tag_professor.ffill(inplace=True)
             df.num_student.ffill(inplace=True)
-            df.to_csv(res_path + str(num) + '.csv', index=False)
 
+            # 计算授课年份
+            date = pd.to_datetime(df['post_date']).dt.year
+            year_first_review = date.max() - date.min()
+            df.insert(loc=5, column='year_since_first_review', value=year_first_review)
+
+            df.to_csv(res_path + str(num) + '.csv', index=False)
             print('第' + str(num) + '文件','名字是'+df['professor_name'][0])
 
         num += 1
