@@ -11,6 +11,7 @@
 # 心理学教授有效数据共计36606
 
 import pandas as pd
+import os
 import shutil
 
 src = r'C:\Users\Administrator\Desktop\Extract_RateMyProfessor1'
