@@ -1,6 +1,7 @@
 import os
 import pandas as pd
 
+#统计学科种类和不同学科种类的评论数
 def DepStat(inputfile,outputfile):
     df=pd.read_csv(inputfile)
     DepName=df['department_name']

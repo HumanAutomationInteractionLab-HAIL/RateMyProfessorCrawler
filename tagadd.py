@@ -4,6 +4,7 @@ import splittag
 import numpy as np
 import re
 
+#在原csv文件中增加线下线上课程的标识符和不同tag的统计数据栏
 def isonline(df):
    onlines=df['name_onlines']
    offlines=df['name_not_onlines']

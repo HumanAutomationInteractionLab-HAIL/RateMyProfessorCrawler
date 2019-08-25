@@ -1,6 +1,7 @@
 import re
 import pandas as pd
 
+#分割tag
 def splittag(Tag):
     templist=re.split('\([0-9]+\)',Tag)
     templist= list(filter(None, templist))

@@ -1,6 +1,8 @@
 import pandas as pd
 import os
 
+
+#读入csv数据，并写入到同一csv文件中(数据样例用)
 inputfile_dir='F:/datasample'
 outputfile='datasample.csv'
 dir=os.listdir(inputfile_dir)
