@@ -4,6 +4,22 @@ import splittag
 import numpy as np
 import re
 
+def isonline(df):
+   onlines=df['name_onlines']
+   offlines=df['name_not_onlines']
+   tags=['online','offline']
+   df1=pd.DataFrame(np.zeros((len(df),2),dtype=np.int),columns=tags)
+   for index1,value1 in enumerate(onlines):
+       if not value1=='NAN':
+           df1.iat[index1, 0]=1          
+   for index1,value1 in enumerate(offlines):
+       if not value1=='NAN':
+           df1.iat[index1, 1]=1 
+   for i in range(35,37):
+         df.insert(i,tags[i-35],df1[tags[i-35]])
+
+   return df
+
 def tagadd(inputfile,outputfile):
     df1=pd.read_csv(inputfile)
     tags=['Gives good feedback','Respected','Lots of homework','Accessible outside class','Get ready to read','Participation matters',"Skip class?",'Inspirational','Graded by few things', 'Test heavy','Group projects','Clear grading criteria','Hilarious','Beaware of pop quizzes','Amazing lectures','Lecture heavy','Caring','Extra credit','So many papers','Tough grader']
@@ -34,5 +50,7 @@ def tagadd(inputfile,outputfile):
                 df3.iat[index1, index2] =1
     for i in range(41,61):
          df1.insert(i,StuTagName[i-41],df3[StuTagName[i-41]])
+
+    df1=isonline(df1)
     df1.to_csv(outputfile,index=False)
     return
