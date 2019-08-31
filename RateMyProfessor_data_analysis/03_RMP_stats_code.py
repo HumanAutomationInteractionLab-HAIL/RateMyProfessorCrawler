@@ -16,12 +16,13 @@ src = r'/Users/liumingchun/【1】科研+实验室/3-科研项目/RateMyProfesso
 
 def TagProfessorAnalysis():
     ''' 1.分析助理教授，副教授，教授的TAG的词频并卡方检验 assistant professor, associate professor and full professor'''
-    df = pd.read_csv(src, usecols=['professor_name','school_name', 'year_since_first_review', 'tag_professor'])
-
+    df = pd.read_csv(src,nrows=1000, usecols=['professor_name','school_name', 'year_since_first_review', 'tag_professor'])
+    pd.set_option('display.max_rows', 100, 'display.max_columns', 1000, "display.max_colwidth", 1000, 'display.width',
+                  1000)
     # 去除重复教授
     assistant_professor = df[(df['year_since_first_review'] >= 0) & (df['year_since_first_review'] <= 6)].drop_duplicates(['professor_name','school_name'], 'first', False)
-    associate_professor  = df[(df['year_since_first_review'] < 12) & (df['year_since_first_review'] > 6)].drop_duplicates('professor_name', 'first', False)
-    full_professor  = df[(df['year_since_first_review'] >= 12)].drop_duplicates('professor_name', 'first', False)
+    associate_professor  = df[(df['year_since_first_review'] < 15) & (df['year_since_first_review'] > 6)].drop_duplicates('professor_name', 'first', False)
+    full_professor  = df[(df['year_since_first_review'] >= 15)].drop_duplicates('professor_name', 'first', False)
     # print(assistant_professor)
     # print(associate_professor)
     # print(full_professor)
@@ -65,10 +66,12 @@ def TagProfessorAnalysis():
     df3['associate_professor_count'] = df2['associate_professor'].value_counts()
     df3['full_professor_count'] = df2['full_professor'].value_counts()
 
+
+
     df3['assistant professor frequency'] = df3['assistant_professor_count'] / df3['assistant_professor_count'].sum()
     df3['associate professor frequency'] = df3['associate_professor_count'] / df3['associate_professor_count'].sum()
     df3['full professor frequency'] = df3['full_professor_count'] / df3['full_professor_count'].sum()
-
+    print(df3)
     # 对TAG卡方检验，此方法存在问题
     # https: // blog.csdn.net / qq_38214903 / article / details / 82967812
     # p = stats.chisquare(f_obs=df3[['assistant_professor_count', 'associate_professor_count', 'full_professor_count']], axis=1)
@@ -145,7 +148,11 @@ def High_low_professor_tag_analysis():
 # 计算课程评分 和 难度、是否再次选课的关系
 def corr_rating_difficulty():
     df = pd.read_csv(src,nrows=2000000, usecols=['professor_name','school_name', 'star_rating', 'diff_index'])
+    pd.set_option('display.max_rows', 100, 'display.max_columns', 1000, "display.max_colwidth", 1000, 'display.width',
+                  1000)
     df = df[(df['star_rating'] >= 1.0 ) & (df['diff_index'] >= 1.0)].drop_duplicates(['professor_name','school_name'], 'first', False)
+    print(df.describe()) #计算平均数，标准差
+
 
     # 计算评分和难度的回归方程
     print('计算diff_index和star_rating的回归方程和R方')
@@ -160,6 +167,7 @@ def corr_rating_difficulty():
     data = data.rename(index=str, columns={'diff_index': 'Difficulty Index', 'star_rating': 'Star Rating'})
     # g = sns.jointplot('Difficulty Index','Star Rating', data=data,height=6,ratio=7, kind="reg", xlim=(1,5), ylim=(1.0, 5.0),space=0,color='b')
     g = sns.jointplot('Difficulty Index','Star Rating', data=data,height=6,ratio=7, kind="kde", xlim=(1,5), ylim=(1.0, 5.0),space=0,color='b')
+    sns.regplot(data['Difficulty Index'], data['Star Rating'], scatter=False, ax=g.ax_joint)
 
     plt.text(-2.8, 1.5, r"Y=-0.50X+5.18", fontsize=12)
     plt.text(-2.8, 1.2, r'$R^2$=0.20', fontsize=12)
@@ -177,6 +185,8 @@ def corr_rating_take_again():
 
     df = df.dropna(0)
     print(df.info())
+    print(df.describe())
+
     # 计算回归方程
     regression2 = stats.linregress(df[['professor_take_again','star_rating']])
     print(regression2)
@@ -260,19 +270,45 @@ def for_cerdis():
     df = pd.read_csv(src, usecols=['student_star', 'for_credits',"attence", 'grades'])
     df = df.dropna(axis=0)
     print(df.info())
-    df = df.rename(index=str, columns={'for_credits': 'For Credits', 'student_star': 'Star Rating Given by Students',"attence":"Attence",'grades':'Student Grade'})
-    g = sns.set("paper",font_scale =1.3)
-    g = sns.set_style("white")
+    df = df.rename(index=str, columns={'for_credits': 'For Credits', 'student_star': 'Star Rating Given by Students',"attence":"Attendance",'grades':'Student Grade'})
+    # print(df['grades'].count()) #  1438024
 
-    # # 是否为了学分
-    # g = sns.catplot(x="For Credits", y="Star Rating Given by Students", kind='box', width=0.2,
-    #                 data=df[['Star Rating Given by Students', 'For Credits']], order=["Yes", "No"])
-    # # 是否强制
-    # g = sns.catplot(x="Attence", y="Star Rating Given by Students",kind='box' ,width=0.25, data=df[["Attence", "Star Rating Given by Students"]])
+    # 使用plotly画箱型图
+    import plotly.express as px
+    # tips = px.data.tips()
+    # print(tips)
+    fig = px.box(df, x="Student Grade", y="Star Rating Given by Students", points="all")
+    fig.show()
 
-    # 成绩分布
-    g = sns.catplot(x="Student Grade", y="Star Rating Given by Students",kind='box' ,width=0.25, data=df[["Student Grade", "Star Rating Given by Students"]], order=['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F','WD','INC','Not','Audit/No'])
-    plt.show()
+
+    # # 计算效应量 120 subjects, 3 groups, and Kruskal-Wallis chi²=7.5 (p=0.023518)
+    # # 1) F(3 - 1, 120 - 3) = 7.5 / (3 - 1) = 3.75
+    # # 2) η²=(3.75 x (3-1)) / (3.75 x (3-1) + (120 - 3))=0.060
+    # # https://www.researchgate.net/post/Anyone_know_how_to_calculate_eta_squared_for_a_Kruskal-Wallis_analysis
+    # #  transform chi² into an F value with k-1，公式是F(dfn,dfd)=chi²/(k-1)
+    # F= 384846.43 / 1438024
+    # print('F：', F)
+    # # ηp²=(F x dfn)/(F x dfn + dfd)
+    # effect_size = (F * 16 ) / (F * 16+ 384846.43 - 1438024)
+    # print( 'η²',effect_size)
+
+
+
+
+    # g = sns.set("paper",font_scale =1.3)
+    # g = sns.set_style("white")
+    #
+    # # # 是否为了学分
+    # # g = sns.catplot(x="For Credits", y="Star Rating Given by Students", kind='box', width=0.2,
+    # #                 data=df[['Star Rating Given by Students', 'For Credits']], order=["Yes", "No"])
+    # # # 是否强制
+    # # g = sns.catplot(x="Attence", y="Star Rating Given by Students",kind='box' ,width=0.25, data=df[["Attence", "Star Rating Given by Students"]])
+    #
+    # # 成绩分布
+    # g = sns.catplot(x="Student Grade", y="Star Rating Given by Students",kind='box' ,width=0.25, data=df[["Student Grade", "Star Rating Given by Students"]], order=['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F','WD','INC','Not','Audit/No'])
+    # plt.show()
+
+
 
 
 # 是否为了分数, 强制进行非参数检验
@@ -397,8 +433,9 @@ if __name__ == '__main__':
     # TagProfessorAnalysis() # 计算助理教授、副教授和终身教授的tag
     # High_low_professor_tag_analysis() #计算高分组和低分组教授的tag
     # corr_rating_difficulty() # 计算难度和评分的关系，计算所有变量的相关矩阵
-    # for_cerdis()
-
+    # corr_rating_take_again()
+    for_cerdis()
+    #
     # mannwhitneyu()
     # Anova()
 
@@ -406,4 +443,4 @@ if __name__ == '__main__':
 
     # corr_rating_take_again()
 
-    all_corr()
+    # all_corr()
