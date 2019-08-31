@@ -8,6 +8,4 @@ def DepStat(inputfile,outputfile):
     DepUni=DepName.unique()
     #print(DepUni)
     DepGroup=df['department_name'].value_counts()
-    DepGroup=DepGroup.append(temp)
-    print(DepGroup)
-    DepGroup.to_csv(outputfile,header=True)
+    DepGroup.to_csv(outputfile,mode='a',header=True,index=True)
