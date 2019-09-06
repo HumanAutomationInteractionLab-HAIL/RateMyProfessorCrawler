@@ -5,7 +5,7 @@
 
 import pandas as pd
 import numpy as np
-
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 from scipy import stats
 import seaborn as sns
@@ -147,30 +147,30 @@ def High_low_professor_tag_analysis():
 
 # 计算课程评分 和 难度、是否再次选课的关系
 def corr_rating_difficulty():
-    df = pd.read_csv(src,nrows=2000000, usecols=['professor_name','school_name', 'star_rating', 'diff_index'])
+    df = pd.read_csv(src, usecols=['professor_name','school_name', 'star_rating', 'diff_index'])
     pd.set_option('display.max_rows', 100, 'display.max_columns', 1000, "display.max_colwidth", 1000, 'display.width',
                   1000)
     df = df[(df['star_rating'] >= 1.0 ) & (df['diff_index'] >= 1.0)].drop_duplicates(['professor_name','school_name'], 'first', False)
     print(df.describe()) #计算平均数，标准差
-
-
     # 计算评分和难度的回归方程
     print('计算diff_index和star_rating的回归方程和R方')
     data = df[['diff_index', 'star_rating']]
     regression = stats.linregress(data)
     print("R square：", regression[2] ** 2)
     print('线性回归方程是 Y= %.3fX + %.3f,rvalue是%.3f,p-values是%s,标准误是%s' % regression)
+
     g = sns.set("paper",font_scale =1.3)
     g = sns.set_style("white")
-    # 随机取1000个点
-    # data = data.sample(1000)
     data = data.rename(index=str, columns={'diff_index': 'Difficulty Index', 'star_rating': 'Star Rating'})
-    # g = sns.jointplot('Difficulty Index','Star Rating', data=data,height=6,ratio=7, kind="reg", xlim=(1,5), ylim=(1.0, 5.0),space=0,color='b')
-    g = sns.jointplot('Difficulty Index','Star Rating', data=data,height=6,ratio=7, kind="kde", xlim=(1,5), ylim=(1.0, 5.0),space=0,color='b')
-    sns.regplot(data['Difficulty Index'], data['Star Rating'], scatter=False, ax=g.ax_joint)
 
-    plt.text(-2.8, 1.5, r"Y=-0.50X+5.18", fontsize=12)
-    plt.text(-2.8, 1.2, r'$R^2$=0.20', fontsize=12)
+    g = sns.jointplot('Difficulty Index','Star Rating', data=data,height=6,ratio=7, kind="kde", xlim=(1,5), ylim=(1.0, 5.0),space=0,color='b')
+    # g = sns.regplot(data['Difficulty Index'], data['Star Rating'], scatter=False, ax=g.ax_joint)
+    # g = sns.jointplot('Difficulty Index','Star Rating', data=data,height=6,ratio=7, kind="reg", xlim=(1,5), ylim=(1.0, 5.0),space=0,color='b')
+    g = sns.regplot(data['Difficulty Index'], data['Star Rating'], scatter=False, ax=g.ax_joint)
+
+
+    plt.text(-20.8, 1.5, r"Y=-0.50X+5.18", fontsize=12)
+    plt.text(-20.8, 1.2, r'$R^2$=0.20', fontsize=12)
     plt.show()
 
 # 计算评分和是否再次选课
@@ -182,9 +182,8 @@ def corr_rating_take_again():
         r'<span class="would-take-again">Would Take Again: <span class="response">N/A</span></span>\\r\\n                <span class="would-take-again">Would Take Again: <span class="response">N/A</span></span>\\r\\n                <span class="would-take-again">Would Take Again: <span class="response">N/A</span></span>\\r\\n                ',np.nan,regex=True)
 
     df['professor_take_again'] = df['take_again'].str.strip('%').astype(float) / 100  # 百分数转化成小数
-
     df = df.dropna(0)
-    print(df.info())
+    # print(df.info())
     print(df.describe())
 
     # 计算回归方程
@@ -199,9 +198,10 @@ def corr_rating_take_again():
     data = df.rename(index=str, columns={'professor_take_again': 'Would Take Again', 'star_rating': 'Star Rating'})
     g = sns.jointplot('Star Rating','Would Take Again', data=data, height=6, ratio=7, kind="kde", xlim=(1, 5),
                       ylim=(0, 1.0), space=0, color='b')
+    g = sns.regplot(data['Star Rating'], data['Would Take Again'], scatter=False, ax=g.ax_joint)
 
-    plt.text(-4.2, 0.2, r"Y=2.45X+2.10", fontsize=12)
-    plt.text(-4.2, 0.1, r'$R^2$=0.64', fontsize=12)
+    plt.text(-14.2, 0.2, r"Y=2.45X+2.10", fontsize=12)
+    plt.text(-14.2, 0.1, r'$R^2$=0.64', fontsize=12)
     plt.show()
 
 
@@ -265,21 +265,14 @@ def take_again_corr():
     plt.pause(0)  #防止图闪退
 
 
-# 是否为了分数, 强制及分数分布
+# 是否为了分数, 强制及分数分
 def for_cerdis():
     df = pd.read_csv(src, usecols=['student_star', 'for_credits',"attence", 'grades'])
     df = df.dropna(axis=0)
-    print(df.info())
+    print(df)
+
     df = df.rename(index=str, columns={'for_credits': 'For Credits', 'student_star': 'Star Rating Given by Students',"attence":"Attendance",'grades':'Student Grade'})
     # print(df['grades'].count()) #  1438024
-
-    # 使用plotly画箱型图
-    import plotly.express as px
-    # tips = px.data.tips()
-    # print(tips)
-    fig = px.box(df, x="Student Grade", y="Star Rating Given by Students", points="all")
-    fig.show()
-
 
     # # 计算效应量 120 subjects, 3 groups, and Kruskal-Wallis chi²=7.5 (p=0.023518)
     # # 1) F(3 - 1, 120 - 3) = 7.5 / (3 - 1) = 3.75
@@ -292,22 +285,48 @@ def for_cerdis():
     # effect_size = (F * 16 ) / (F * 16+ 384846.43 - 1438024)
     # print( 'η²',effect_size)
 
-
-
-
-    # g = sns.set("paper",font_scale =1.3)
-    # g = sns.set_style("white")
-    #
     # # # 是否为了学分
     # # g = sns.catplot(x="For Credits", y="Star Rating Given by Students", kind='box', width=0.2,
     # #                 data=df[['Star Rating Given by Students', 'For Credits']], order=["Yes", "No"])
+
     # # # 是否强制
     # # g = sns.catplot(x="Attence", y="Star Rating Given by Students",kind='box' ,width=0.25, data=df[["Attence", "Star Rating Given by Students"]])
     #
-    # # 成绩分布
-    # g = sns.catplot(x="Student Grade", y="Star Rating Given by Students",kind='box' ,width=0.25, data=df[["Student Grade", "Star Rating Given by Students"]], order=['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F','WD','INC','Not','Audit/No'])
-    # plt.show()
 
+    # 成绩分布
+    # g = sns.catplot(x="Student Grade", y="Star Rating Given by Students",kind='box' ,linewidth = 0.5,width=0.4, data=df[["Student Grade", "Star Rating Given by Students"]], order=['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F','WD','INC','Not','Audit/No'], palette=sns.color_palette('Blues'))
+    plt.show()
+
+def professor_student_frequency():
+    # 1、计算不同成绩教授的个数
+    df = pd.read_csv(src, usecols=['student_star', 'grades'])
+    pd.set_option('display.max_rows', 100, 'display.max_columns', 1000, "display.max_colwidth", 1000, 'display.width',1000)
+    df = df.dropna(axis=0)
+
+    df2 = df.rename(index=str, columns={'grades': 'Student Grade','student_star': 'Star Rating'})
+    # # # 成绩分布
+    # g = sns.barplot(x="Student Grade", y="Star Rating",saturation = 0.5 ,errcolor='0.2',errwidth='0.8', data=df2[["Student Grade", "Star Rating"]], order=['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F','WD','INC','Not','Audit/No'], palette=sns.color_palette('Blues'),linewidth=0.8)
+
+    fig, ax1 = plt.subplots(figsize=(10, 8))
+    graph = sns.countplot(ax=ax1, x='Student Grade', data=df2,palette=sns.color_palette('Blues'),order=['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F','WD','INC','Not','Audit/No'])
+    graph.set_xticklabels(graph.get_xticklabels())
+    for p in graph.patches:
+        height = p.get_height()
+        graph.text(p.get_x() + p.get_width() / 2., height + 0.3, height, ha="center")
+
+    ax1.set(ylabel='The number of professor')
+    g = sns.despine(right=True, top=True)
+    plt.show()
+
+def take_again_grade():
+    df = pd.read_csv(src,nrows=10000, usecols=['would_take_agains', 'grades'])
+    pd.set_option('display.max_rows', 100, 'display.max_columns', 1000, "display.max_colwidth", 1000, 'display.width',1000)
+    df = df.dropna(axis=0)
+    df ['number'] = 1
+    # print(df)
+
+    table = pd.pivot_table(df,values='number', index =['grades'], columns=['would_take_agains'],  aggfunc= 'sum', observed=True)
+    print(table)
 
 
 
@@ -434,7 +453,9 @@ if __name__ == '__main__':
     # High_low_professor_tag_analysis() #计算高分组和低分组教授的tag
     # corr_rating_difficulty() # 计算难度和评分的关系，计算所有变量的相关矩阵
     # corr_rating_take_again()
-    for_cerdis()
+    # for_cerdis()
+    professor_student_frequency()
+    # take_again_grade()
     #
     # mannwhitneyu()
     # Anova()
