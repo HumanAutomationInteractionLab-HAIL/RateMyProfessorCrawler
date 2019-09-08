@@ -298,24 +298,41 @@ def for_cerdis():
     plt.show()
 
 def professor_student_frequency():
-    # 1、计算不同成绩教授的个数
-    df = pd.read_csv(src, usecols=['student_star', 'grades'])
-    pd.set_option('display.max_rows', 100, 'display.max_columns', 1000, "display.max_colwidth", 1000, 'display.width',1000)
+    #  计不同教授给学生分许的
+
+    df = pd.read_csv(src, usecols=['year_since_first_review', 'student_star', 'grades'])
+    pd.set_option('display.max_rows', 100, 'display.max_columns', 1000, "display.max_colwidth", 1000, 'display.width',
+                  1000)
     df = df.dropna(axis=0)
 
-    df2 = df.rename(index=str, columns={'grades': 'Student Grade','student_star': 'Star Rating'})
-    # # # 成绩分布
-    # g = sns.barplot(x="Student Grade", y="Star Rating",saturation = 0.5 ,errcolor='0.2',errwidth='0.8', data=df2[["Student Grade", "Star Rating"]], order=['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F','WD','INC','Not','Audit/No'], palette=sns.color_palette('Blues'),linewidth=0.8)
+    # bins = [0, 7.0, 15.0, np.inf]
+    # names = ['assistant professor', 'associate professor ', 'full professor']
+    # df['professor'] = pd.cut(df['year_since_first_review'], bins, labels=names)
+    # print(df.dtypes)
+    # print(df)
 
     fig, ax1 = plt.subplots(figsize=(10, 8))
-    graph = sns.countplot(ax=ax1, x='Student Grade', data=df2,palette=sns.color_palette('Blues'),order=['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F','WD','INC','Not','Audit/No'])
+    df2 = df.rename(index=str, columns={'grades': 'Student Grade', 'student_star': 'Star Rating'})
+    # # # # 成绩分布
+    # g = sns.barplot(x="Student Grade", y="Star Rating",errcolor='0.2',errwidth='0.8', data=df2, order=['A+','A','A-','B+','B','B-','C+','C','C-','D+','D','D-','F','WD','INC','Not','Audit/No'], palette=sns.color_palette('Blues'),linewidth=0.8)
+    # g.set_xticklabels(g.get_xticklabels())
+    # for p in g.patches:
+    #     height = p.get_height()
+    #     g.text(p.get_x() + p.get_width() / 2., height + 0.3, height, ha="center")
+
+    # 三类教授对学生的评分
+    graph = sns.countplot(ax=ax1, x='Student Grade', data=df2, palette=sns.color_palette('Blues'),
+                          order=['A+', 'A', 'A-', 'B+', 'B', 'B-', 'C+', 'C', 'C-', 'D+', 'D', 'D-', 'F', 'WD', 'INC',
+                                 'Not', 'Audit/No'])
     graph.set_xticklabels(graph.get_xticklabels())
     for p in graph.patches:
         height = p.get_height()
-        graph.text(p.get_x() + p.get_width() / 2., height + 0.3, height, ha="center")
+        # graph.text(p.get_x() + p.get_width() / 2., height + 8, height, ha="center", fontsize=10)
+        graph.text(p.get_x() + p.get_width() / 2., height + random.random(), height, ha="center", fontsize=10)
 
-    ax1.set(ylabel='The number of professor')
+    ax1.set(ylabel='The Number of Student Reciving Grade')
     g = sns.despine(right=True, top=True)
+    plt.legend(loc='upper right')
     plt.show()
 
 def take_again_grade():
@@ -327,7 +344,6 @@ def take_again_grade():
 
     table = pd.pivot_table(df,values='number', index =['grades'], columns=['would_take_agains'],  aggfunc= 'sum', observed=True)
     print(table)
-
 
 
 # 是否为了分数, 强制进行非参数检验
@@ -459,7 +475,6 @@ if __name__ == '__main__':
     #
     # mannwhitneyu()
     # Anova()
-
     # word_comment()
 
     # corr_rating_take_again()
